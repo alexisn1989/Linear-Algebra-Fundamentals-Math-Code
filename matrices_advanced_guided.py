@@ -1,476 +1,346 @@
 # ADVANCED LINEAR ALGEBRA PROJECT: Inverse, Column Space, Null Space, Nonsquare Matrices
-# Scaffolded Version - Fill in the blanks
+# Guided Version - Full Code with Explanations
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 print("=" * 70)
-print("CHAPTER 7 & 8: Advanced Matrix Concepts")
+print("CHAPTER 7: Inverse Matrices, Column Space, Null Space")
 print("=" * 70)
 
+"""
+KEY CONCEPTS:
+
+1. INVERSE MATRIX
+   If A is a square matrix, A^(-1) is its inverse
+   A @ A^(-1) = I (identity matrix)
+   
+   What it means: Undo a transformation
+   If A rotates by 90°, A^(-1) rotates by -90°
+   
+2. DETERMINANT REVISITED
+   det(A) = 0 means A has NO inverse (singular)
+   det(A) ≠ 0 means A has an inverse
+   
+3. COLUMN SPACE
+   All possible outputs of the transformation
+   "What vectors can this matrix produce?"
+   
+4. NULL SPACE (Kernel)
+   All vectors that map to zero
+   "What vectors disappear when transformed?"
+   
+   Example: [ 1  0 ] @ [x] = [x]
+            [ 0  0 ]   [y]   [0]
+   
+   Null space: any vector [0, y] (y can be anything)
+   Because multiplying by 0 makes it disappear
+"""
+
 # ============================================================================
-# SECTION 1: Inverse Matrices
-# ============================================================================
+print("\n" + "=" * 70)
+print("SECTION 1: Inverse Matrices")
+print("=" * 70)
 
 def matrix_inverse(matrix):
-    """
-    Calculate the inverse of a square matrix.
+    """Calculate the inverse of a square matrix."""
+    det = np.linalg.det(matrix)
     
-    Math: If A @ A^(-1) = I, then A^(-1) is the inverse of A
-    
-    TODO: Check determinant first
-    Hint: Use np.linalg.det(matrix)
-    Hint: Use np.linalg.inv(matrix)
-    """
-    
-    det = np.linalg.det(matrix)  # Calculate determinant
-    
-    if abs(det) < 1e-10:
-        print("WARNING: Matrix is singular (no inverse exists)")
+    if abs(det) < 1e-10:  # Close to zero
+        print("WARNING: Determinant is ~0. Matrix is singular (no inverse exists).")
         return None
     
-    inverse = np.linalg.inv(matrix)  # Calculate inverse
+    inverse = np.linalg.inv(matrix)
     return inverse
 
-
+# Test 1: Invertible matrix
 print("\nTest 1: Invertible Matrix")
-A = np.array([[1, 2],
+A = np.array([[1, 2], 
               [3, 4]])
 print(f"Matrix A:\n{A}")
 
 A_inv = matrix_inverse(A)
-if A_inv is not None:
-    print(f"Inverse of A:\n{A_inv}")
-    
-    # TODO: Verify A @ A^(-1) = I
-    identity =A @ A_inv # Multiply A by its inverse
-    print(f"A @ A^(-1):\n{np.round(identity, 10)}")
-    print(f"(Should be identity matrix)")
+print(f"\nInverse of A:\n{A_inv}")
+
+# Verify: A @ A^(-1) = I
+identity_check = A @ A_inv
+print(f"\nA @ A^(-1) (should be identity):\n{np.round(identity_check, 10)}")
+
+# Test 2: Non-invertible (singular) matrix
+print("\n" + "-" * 70)
+print("Test 2: Non-Invertible (Singular) Matrix")
+B = np.array([[1, 2],
+              [2, 4]])  # Row 2 is 2x Row 1 (linearly dependent)
+print(f"Matrix B:\n{B}")
+print(f"Determinant: {np.linalg.det(B)}")
+
+B_inv = matrix_inverse(B)
+if B_inv is None:
+    print("B has no inverse (det = 0)")
 
 # ============================================================================
-# SECTION 2: Column Space & Rank
-# ============================================================================
-
-def get_rank_and_column_space(matrix):
-    """
-    Find the rank of a matrix (dimension of column space).
-    
-    Math: rank = number of linearly independent columns
-    
-    TODO: Use np.linalg.matrix_rank()
-    """
-    
-    rank = np.linalg.matrix_rank(matrix)  # Use np.linalg.matrix_rank(matrix)
-    
-    return rank
-
-
 print("\n" + "=" * 70)
-print("Column Space Analysis")
+print("SECTION 2: Column Space")
 print("=" * 70)
 
-print("\nExample 1: Full Rank")
+"""
+COLUMN SPACE:
+The span of all columns of a matrix.
+All possible outputs when you multiply the matrix by any input vector.
+
+For a 2D → 2D transformation:
+- Full rank (det ≠ 0): Column space = entire 2D space
+- Rank 1: Column space = a line
+- Rank 0: Column space = origin (the zero vector)
+
+Rank = number of linearly independent columns
+"""
+
+print("\nExample 1: Full Rank (det ≠ 0)")
 M1 = np.array([[1, 0],
-               [0, 2]])
-rank1 = get_rank_and_column_space(M1)
+               [0, 2]])  # Scales: x by 1, y by 2
+rank1 = np.linalg.matrix_rank(M1)
+det1 = np.linalg.det(M1)
 print(f"Matrix:\n{M1}")
 print(f"Rank: {rank1} (out of 2 possible)")
-print(f"Column space: {2 - rank1} zero, {rank1} linearly independent")
+print(f"Determinant: {det1}")
+print(f"Column space: All of 2D space (full rank)")
 
-print("\nExample 2: Rank Deficient")
+print("\nExample 2: Rank 1 (det = 0)")
 M2 = np.array([[1, 2],
-               [1, 2]])  # Columns are identical
-rank2 = get_rank_and_column_space(M2)
+               [1, 2]])  # Both columns are the same (linearly dependent)
+rank2 = np.linalg.matrix_rank(M2)
+det2 = np.linalg.det(M2)
 print(f"Matrix:\n{M2}")
 print(f"Rank: {rank2} (out of 2 possible)")
-print(f"Column space: Collapses to a line")
+print(f"Determinant: {det2}")
+print(f"Column space: A line (only 1 linearly independent direction)")
+
+print("\nExample 3: Rank 1 (Projection)")
+M3 = np.array([[1, 1],
+               [0, 0]])  # Projects everything onto x-axis
+rank3 = np.linalg.matrix_rank(M3)
+det3 = np.linalg.det(M3)
+print(f"Matrix:\n{M3}")
+print(f"Rank: {rank3}")
+print(f"Determinant: {det3}")
+print(f"Column space: The x-axis (collapses y dimension)")
 
 # ============================================================================
-# SECTION 3: Null Space
-# ============================================================================
-
-def find_null_space(matrix):
-    """
-    Find vectors that map to zero (null space).
-    
-    Math: All x where A @ x = 0
-    
-    TODO: Use SVD (Singular Value Decomposition)
-    Hint: U, S, Vt = np.linalg.svd(matrix)
-    Hint: Check which singular values are ~0
-    """
-    
-    U, S, Vt = np.linalg.svd(matrix)
-    
-    # TODO: Find null space dimension
-    null_threshold = 1e-10
-    null_mask =  S < null_threshold  # Compare S < null_threshold
-    null_dim = np.sum(null_mask)  # Count how many are true
-    
-    # Extract null space vectors (last vectors in Vt if null_dim > 0)
-    if null_dim > 0:
-        null_vecs = Vt[-null_dim:,:].T  # Last null_dim rows of Vt, transposed
-    else:
-        null_vecs = None
-    
-    return null_vecs, null_dim
-
-
 print("\n" + "=" * 70)
-print("Null Space Analysis")
+print("SECTION 3: Null Space")
 print("=" * 70)
 
-print("\nExample 1: Matrix with null space")
+"""
+NULL SPACE (Kernel):
+All vectors that map to zero when transformed by the matrix.
+
+For A @ x = 0, what x satisfies this?
+
+Example: A = [ 1  2 ]
+            [ 0  0 ]
+         
+Null space: Solve [ 1  2 ] @ [x] = [0]
+                   [ 0  0 ]   [y]   [0]
+                   
+This gives: x + 2y = 0  →  x = -2y
+So null space is all vectors [-2y, y] for any y
+Or: y * [-2, 1]  (the line in direction of [-2, 1])
+"""
+
+def find_null_space(matrix):
+    """Find the null space of a matrix using SVD."""
+    # SVD decomposes A = U @ S @ V^T
+    # Right singular vectors corresponding to zero singular values = null space
+    U, S, Vt = np.linalg.svd(matrix)
+    
+    # Find which singular values are ~0
+    null_space_threshold = 1e-10
+    null_mask = S < null_space_threshold
+    
+    # Number of vectors in null space = number of zero singular values
+    null_dim = np.sum(null_mask)
+    
+    # If there are zero singular values, the last vectors in V are the null space
+    if null_dim > 0:
+        null_space_vectors = Vt[-null_dim:, :].T
+    else:
+        null_space_vectors = None
+    
+    return null_space_vectors, null_dim
+
+print("\nExample 1: Matrix with 1D null space")
 A = np.array([[1, 2],
-              [0, 0]])  # Second row all zeros
-print(f"Matrix:\n{A}")
+              [0, 0]])  # Row 2 is all zeros
+print(f"Matrix A:\n{A}")
 
 null_vecs, null_dim = find_null_space(A)
 print(f"Null space dimension: {null_dim}")
 if null_vecs is not None:
-    print(f"Null space basis:\n{null_vecs}")
+    print(f"Null space basis vectors:\n{null_vecs}")
+    print(f"Interpretation: Any vector proportional to {null_vecs[:, 0]} maps to zero")
     
-    # TODO: Verify by multiplying
-    test_vec = null_vecs[:, 0]
-    result = A @ test_vec  # A @ test_vec
-    print(f"A @ null_vector = {np.round(result, 10)} (should be ~[0, 0])")
+    # Verify
+    test_vector = null_vecs[:, 0]
+    result = A @ test_vector
+    print(f"A @ {test_vector} = {np.round(result, 10)} (should be ~[0, 0])")
 
-print("\nExample 2: Full rank matrix")
+print("\n" + "-" * 70)
+print("Example 2: Full rank matrix (null space = {0})")
 B = np.array([[1, 2],
               [3, 4]])
-print(f"Matrix:\n{B}")
+print(f"Matrix B:\n{B}")
 
 null_vecs, null_dim = find_null_space(B)
 print(f"Null space dimension: {null_dim}")
-print(f"(Only the zero vector)")
+if null_dim == 0:
+    print("Null space contains only the zero vector")
 
 # ============================================================================
-# SECTION 4: Rank-Nullity Theorem
-# ============================================================================
-
-def verify_rank_nullity(matrix):
-    """
-    Verify: rank(A) + nullity(A) = n
-    
-    where n = number of columns
-    """
-    
-    rank = np.linalg.matrix_rank(matrix)  # Use np.linalg.matrix_rank(matrix)
-    _, nullity = find_null_space(matrix)
-    n_cols = matrix.shape[1]
-    
-    print(f"Rank: {rank}")
-    print(f"Nullity: {nullity}")
-    print(f"Columns: {n_cols}")
-    print(f"Rank + Nullity = {rank} + {nullity} = {rank + nullity}")
-    
-    # TODO: Check if equal
-    if rank + nullity == n_cols:  # rank + nullity == n_cols
-        print("✓ Rank-Nullity theorem verified!")
-    else:
-        print("✗ Something went wrong")
-
-
 print("\n" + "=" * 70)
-print("Rank-Nullity Theorem")
+print("CHAPTER 8: Nonsquare Matrices (Dimension Shifting)")
 print("=" * 70)
 
-print("\nTest matrix:")
-C = np.array([[1, 2, 3],
-              [4, 5, 6]])
-print(f"Matrix (shape {C.shape}):\n{C}")
+"""
+NONSQUARE MATRICES:
+Transform from one dimension to another.
 
-verify_rank_nullity(C)
+m × n matrix transforms n-dimensional space to m-dimensional space
 
-# ============================================================================
-# SECTION 5: Nonsquare Matrices
-# ============================================================================
-
-def transform_nonsquare(input_vector, matrix):
-    """
-    Apply a nonsquare matrix transformation.
-    
-    Math: y = A @ x
-    where A is m×n (transforms n-dimensional to m-dimensional)
-    """
-    
-    output = matrix @ input_vector # matrix @ input_vector
-    return output
-
-
-print("\n" + "=" * 70)
-print("Nonsquare Matrices (Dimension Shifting)")
-print("=" * 70)
+Examples:
+- 2×3 matrix: 3D → 2D (projection, compression)
+- 3×2 matrix: 2D → 3D (embedding, expansion)
+- m×n where m ≠ n: always has non-trivial null space or can't be inverted
+"""
 
 print("\nExample 1: 3D → 2D (Projection)")
-# Project 3D to 2D (drop z-coordinate)
+# This matrix projects 3D points onto 2D (x-y plane)
 P = np.array([[1, 0, 0],
-              [0, 1, 0]])  # 2×3 matrix
-print(f"Projection matrix shape: {P.shape}")
-print(f"Matrix:\n{P}")
+              [0, 1, 0]])  # 2×3: takes [x, y, z] → [x, y]
+print(f"Projection matrix (3D → 2D):\n{P}")
+print(f"Shape: {P.shape} (2 rows, 3 columns)")
 
+# Test on a 3D point
 point_3d = np.array([5, 3, 7])
-point_2d = transform_nonsquare(point_3d, P)
-
+point_2d = P @ point_3d
 print(f"\n3D point: {point_3d}")
 print(f"After projection: {point_2d}")
+print(f"(Notice z-coordinate is lost)")
 
 print("\nExample 2: 2D → 3D (Embedding)")
-# Embed 2D into 3D (add z=0)
+# This matrix embeds 2D into 3D
 E = np.array([[1, 0],
               [0, 1],
-              [0, 0]])  # 3×2 matrix
-print(f"Embedding matrix shape: {E.shape}")
-print(f"Matrix:\n{E}")
+              [0, 0]])  # 3×2: takes [x, y] → [x, y, 0]
+print(f"\nEmbedding matrix (2D → 3D):\n{E}")
+print(f"Shape: {E.shape} (3 rows, 2 columns)")
 
 point_2d = np.array([3, 4])
-point_3d = transform_nonsquare(point_2d, E)
-
+point_3d = E @ point_2d
 print(f"\n2D point: {point_2d}")
 print(f"After embedding: {point_3d}")
+print(f"(Added a zero z-coordinate)")
+
+print("\nExample 3: 3×2 matrix visualization")
+A = np.array([[2, 0],
+              [0, 2],
+              [1, 1]])  # 3×2: scales in 2D, then embeds to 3D
+
+print(f"Matrix:\n{A}")
+print(f"This transforms 2D vectors to 3D")
+print(f"Column 1 [2, 0, 1]: where [1, 0] goes")
+print(f"Column 2 [0, 2, 1]: where [0, 1] goes")
+
+# Transform basis vectors
+basis_x = np.array([1, 0])
+basis_y = np.array([0, 1])
+
+result_x = A @ basis_x
+result_y = A @ basis_y
+
+print(f"\n[1, 0] → {result_x}")
+print(f"[0, 1] → {result_y}")
 
 # ============================================================================
-# CHALLENGES
-# ============================================================================
-
 print("\n" + "=" * 70)
-print("CHALLENGES (Try These)")
+print("SECTION 4: Rank-Nullity Theorem")
+print("=" * 70)
+
+"""
+RANK-NULLITY THEOREM:
+For an m×n matrix A:
+
+rank(A) + nullity(A) = n
+
+Where:
+- rank = dimension of column space (how many independent directions)
+- nullity = dimension of null space (how many directions map to zero)
+- n = number of columns (input dimension)
+"""
+
+print("\nExample 1: Full column rank (2×3)")
+A = np.array([[1, 0, 0],
+              [0, 1, 0]])  # Projects 3D to 2D, losing one dimension
+rank = np.linalg.matrix_rank(A)
+null_vecs, nullity = find_null_space(A)
+n_cols = A.shape[1]
+
+print(f"Matrix shape: {A.shape}")
+print(f"Rank: {rank}")
+print(f"Nullity: {nullity}")
+print(f"Columns: {n_cols}")
+print(f"Rank + Nullity = {rank} + {nullity} = {rank + nullity} = {n_cols} ✓")
+
+print("\nExample 2: Rank-deficient (2×3)")
+B = np.array([[1, 2, 3],
+              [2, 4, 6]])  # Row 2 = 2 × Row 1 (linearly dependent)
+rank = np.linalg.matrix_rank(B)
+null_vecs, nullity = find_null_space(B)
+n_cols = B.shape[1]
+
+print(f"Matrix:\n{B}")
+print(f"Matrix shape: {B.shape}")
+print(f"Rank: {rank}")
+print(f"Nullity: {nullity}")
+print(f"Columns: {n_cols}")
+print(f"Rank + Nullity = {rank} + {nullity} = {rank + nullity} = {n_cols} ✓")
+
+# ============================================================================
+print("\n" + "=" * 70)
+print("SUMMARY & CHALLENGES")
 print("=" * 70)
 
 print("""
-CHALLENGE 1: Inverse Matrix
-Create a 2×2 matrix and:
-  a) Calculate its inverse
-  
-  b) Verify A @ A^(-1) = I
-  c) Try with a singular matrix (det=0)
-  
-  
-"
-CHALLENGE 2: Null Space
-Create a 3×3 rank-deficient matrix (one column = sum of others)
-  a) Find its null space
-  b) Verify null space vectors map to zero
-  c) Check rank-nullity theorem
+KEY TAKEAWAYS:
 
-CHALLENGE 3: Rank-Nullity
-Create a 4×2 matrix
-  a) Find rank and nullity
-  b) Verify rank + nullity = 2
+1. INVERSE MATRICES
+   - Only square matrices can have inverses
+   - det ≠ 0 means invertible
+   - A @ A^(-1) = I
 
-CHALLENGE 4: Nonsquare Transformations
-Create a 5×3 matrix and transform random 3D vectors
-  a) Test on basis vectors [1,0,0], [0,1,0], [0,0,1]
-  b) Visualize the output space (5D is hard, but try 3×2 or 4×2)
+2. COLUMN SPACE
+   - All possible outputs
+   - Rank = number of independent columns
+   - Full rank (det ≠ 0) = entire output space
 
-CHALLENGE 5: Projection Matrix
-A projection matrix P satisfies P @ P = P
-Create a projection matrix and verify this property
+3. NULL SPACE
+   - All vectors mapping to zero
+   - Rank-deficient matrices have non-trivial null space
+   - Rank + Nullity = # of columns
+
+4. NONSQUARE MATRICES
+   - m×n transforms n-dimensional space to m-dimensional
+   - Always rank-deficient if m < n (outputs smaller than inputs)
+   - Never invertible (not square)
+
+CHALLENGES:
+
+1. Create an inverse matrix and verify A @ A^(-1) = I
+2. Find the null space of a 3×3 rank-deficient matrix
+3. Create a 4×2 matrix and visualize its column space
+4. Use rank-nullity theorem to verify your results
+5. Create a 2×4 nonsquare matrix and test it on random 4D vectors
 """)
 
-print("\n" + "=" * 70)
-print("Run the guided version to see solutions!")
-print("=" * 70)
-
-M = np.array([[2,1],
-              [1,3]])
-print(f"Matrix M:\n{M}")
-
-M_inv = matrix_inverse(M)
-if M_inv is not None:
-    print(f"Inverse M:\n{M_inv}")
-
-    result = M @ M_inv
-    print(f"\nM @ M^(-1):\n{np.round(result, 10)}")
-    print(f"(Should be identity: [[1,0],[0,1]])")
-
-print ("\n" + "-" * 70)
-print("Trying singular matrix (det=0")
-S = np.array([[1,2],
-             [2,4]])
-
-print(f"Singular matrix S:\n{S}")
-
-print(f"Determinant: {np.linalg.det(S): .2e}")
-
-S_inv = matrix_inverse(S)
-if S_inv is not None:
-    print("✓ Correctly identified singular matrix (no inverse)")
-
-
-
-print("\n" + "=" * 70)
-print("CHALLENGE 2: Null Space")
-print("=" * 70)
-
-M = np.array([[1, 0, 1],
-              [0, 1, 1],
-              [2, 3, 5]])
-
-print(f"Matrix M (rank-deficient):\n{M}")
-print(f"Note: Column 3 = Column 1 + Column 2")
-
-null_vecs, null_dim = find_null_space(M)
-print(f"\n find null space{null_dim}")
-if null_vecs is not None:
-    print(f"Null space basis vectors:\n{null_vecs}")
-
-    print(f"\n Verifying null space vectors:")
-    for i in range(null_dim):
-        test_vec = null_vecs[:,i]
-        result = M @ test_vec
-        print(f"M @ null_vec_{i} = {np.round(result, 10)}")
-        print(f"(Should be ~[0, 0, 0])")
-
-    print(f"\n" + "-" * 70)
-    print("Rank-Nullity Theorem:")
-    rank = np.linalg.matrix_rank(M)
-    n_cols = M.shape[1]
-
-    print(f"Rank: {rank}")
-    print(f"Nullity: {null_dim}")
-    print(f"Columns: {n_cols}")
-    print(f"Rank + Nullity = {rank} + {null_dim} = {rank + null_dim}")
-
-    if rank + null_dim == n_cols:
-        print("✓ Rank-Nullity theorem verified!")
-    else:
-        print("✗ Something went wrong")
-
-print("\n" + "=" * 70)
-print("CHALLENGE 3: Rank-Nullity")
-print("=" * 70)
-
-M = np.array([[1, 2],
-              [3, 4],
-              [5, 6],
-              [7, 8]])
-
-print(f"Matrix M (4×2):\n{M}")
-print(f"Shape: {M.shape} (4 rows, 2 columns)")
-
-rank = np.linalg.matrix_rank(M)
-null_vecs, null_dim = find_null_space(M)
-
-print(f"\nRank: {rank}")
-print(f"Nullity: {null_dim}")
-print(f"Columns: {M.shape[1]}")
-
-total = rank + null_dim
-expected = M.shape[1]
-
-if total == expected:
-    print("✓ Rank-Nullity theorem verified!")
-else:
-    print("✗ Something went wrong")
-
-# Bonus: Interpret what this means
-print(f"\nInterpretation:")
-print(f"- This 4×2 matrix transforms 2D space to 4D space")
-print(f"- Rank {rank} means {rank} linearly independent output directions")
-print(f"- Nullity {null_dim} means {null_dim} input directions map to zero")
-
-
-print("\n" + "=" * 70)
-print("CHALLENGE 4: Nonsquare Transformations")
-print("=" * 70)
-
-M = np.array([[1, 0, 0],
-              [0, 1, 0],
-              [1, 1, 0],
-              [2, 0, 1],
-              [0, 2, 1]])
-
-print(f"Matrix M (5×3):\n{M}")
-print(f"Shape: {M.shape} (transforms 3D → 5D)")
-
-# Fix: Remove extra brackets (should be 1D arrays, not 2D)
-basis_x = np.array([1, 0, 0])
-basis_y = np.array([0, 1, 0])
-basis_z = np.array([0, 0, 1])
-
-result_x = transform_nonsquare(basis_x, M)
-result_y = transform_nonsquare(basis_y, M)
-result_z = transform_nonsquare(basis_z, M)
-
-print(f"[1, 0, 0] → {result_x}")
-print(f"[0, 1, 0] → {result_y}")
-print(f"[0, 0, 1] → {result_z}")
-
-print(f"\nTesting random 3D vectors:")
-for i in range(3):
-    random_vec = np.random.rand(3)
-    result = transform_nonsquare(random_vec, M)
-    print(f"{np.round(random_vec, 2)} → {np.round(result, 2)}")
-
-# Fix: Move this OUTSIDE the loop and create M_simple
-print(f"\n" + "-" * 70)
-print("Visualization with simpler 4×2 matrix (2D → 4D):")
-
-M_simple = np.array([[1, 0],
-                     [0, 1],
-                     [1, 1],
-                     [2, 0]])
-
-# Test basis vectors
-e1 = np.array([1, 0])
-e2 = np.array([0, 1])
-
-out1 = transform_nonsquare(e1, M_simple)
-out2 = transform_nonsquare(e2, M_simple)
-
-print(f"[1, 0] → {out1} (column 1 of matrix)")
-print(f"[0, 1] → {out2} (column 2 of matrix)")
-
-print(f"\nInterpretation:")
-print(f"- Input: 2D space")
-print(f"- Output: 4D space (but only spans a 2D subspace of it)")
-print(f"- Columns show where basis vectors land")
-
-
-P = np.array([[1,0],
-              [0,0]])
-
-print(f"Projection matrix P (onto x-axis):\n{P}")
-
-P_squared = P @ P
-print(f"\nP @ P:\n{P_squared}")
-print(f"\nP:\n{P}")
-
-if np.allclose(P_squared, P):
-    print("\n✓ P @ P = P (idempotent property verified!)")
-else:
-    print("\n✗ Something went wrong")
-
-print(f"\n" + "-" * 70)
-print("Testing projection on a vector:")
-
-v = np.array([3, 5])
-projected = P @ v
-
-print(f"Original vector: {v}")
-print(f"After projection: {projected}")
-print(f"(Notice y-coordinate dropped to 0)")
-
-print(f"\n" + "-" * 70)
-print("Projection matrix (onto line y=x):")
-
-P2 = (1/2) * np.array([[1, 1],
-                       [1, 1]])
-
-print(f"Projection matrix P2:\n{P2}")
-
-P2_squared = P @ P2
-print(f"\nP @ P:\n{np.round(P2_squared, 10)}")
-
-if np.allclose(P2_squared, P2):
-    print("✓ P2 @ P2 = P2 verified!")
-else:
-    print("✗ Not idempotent")
-
-v2 =  np.array([3, 1])
-projected = P @ v2
-
-print(f"\nOriginal vector: {v2}")
-print(f"Projected onto y=x: {np.round(projected, 2)}")
-print(f"(Now on the line y=x)")
+print("\nReady for scaffolded version? Let's practice!")
